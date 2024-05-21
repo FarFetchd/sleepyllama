@@ -1,4 +1,4 @@
-![sleepy llama](https://raw.githubusercontent.com/FarFetchd/sleepyllama/master/sleepyllama.jpg)
+![sleepy llama](https://raw.githubusercontent.com/FarFetchd/sleepyllama/bc6d9d81686640683b912fcabc1d8dc51d0ed33c/sleepyllama.jpg)
 
 # sleepyllama
 
