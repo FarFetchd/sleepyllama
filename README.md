@@ -1,3 +1,5 @@
+![sleepy llama](https://raw.githubusercontent.com/FarFetchd/sleepyllama/master/sleepyllama.jpg)
+
 # sleepyllama
 
 An auto-sleeping and -waking framework around llama.cpp: your inference server will go to sleep after sitting idle for a certain length of time, and wake back up when you start interacting with your frontend.
