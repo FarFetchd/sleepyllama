@@ -1,0 +1,6 @@
+1046a1047
+>         system("nvidia-pstate -s -ps 16");
+1815a1817
+>                 system("nvidia-pstate -s -ps 8");
+2916a2919
+>     system("nvidia-pstate -s -ps 8");
