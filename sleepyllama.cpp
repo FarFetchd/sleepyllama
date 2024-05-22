@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstdio>
+#include <csignal>
 #include <memory>
 #include <thread>
 using namespace std;
@@ -26,6 +27,12 @@ string runShellSync(const char* cmd)
   return ret;
 }
 
+int g_secs_since_busy = 0;
+void handleSIGUSR1(int signal)
+{
+  g_secs_since_busy = kSleepTimeoutSecs + 1; // "sleep now"
+}
+
 int main(int argc, char** argv)
 {
   if (argc != 2)
@@ -34,20 +41,20 @@ int main(int argc, char** argv)
             argv[0]);
     return 1;
   }
+  signal(SIGUSR1, handleSIGUSR1);
 
-  int secs_since_busy = 0;
   FILE* server_pipe = popen(argv[1], "r");
   while (true)
   {
     this_thread::sleep_for(chrono::seconds(kActivityCheckPeriodSecs));
     if (runShellSync("nvidia-smi | grep MiB | sed '/server/d' | grep P8").empty())
-      secs_since_busy = 0;
+      g_secs_since_busy = 0;
     else
-      secs_since_busy += kActivityCheckPeriodSecs;
+      g_secs_since_busy += kActivityCheckPeriodSecs;
 
-    if (secs_since_busy > kSleepTimeoutSecs)
+    if (g_secs_since_busy > kSleepTimeoutSecs)
     {
-      secs_since_busy = 0;
+      g_secs_since_busy = 0;
       uint64_t cur_time = curTimeMSSE();
       system("killall server");
       pclose(server_pipe);
