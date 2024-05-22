@@ -22,6 +22,8 @@ Finally, where you previously pointed your frontend at the llama.cpp server, now
 
 reverse_proxy_WoL needs to be able to run `sudo etherwake`, and to live on the same network as the backend. (This project is very much supposed to be a couple of physical machines that live in your home). The inference machine needs wake-on-LAN enabled in BIOS. sleepyllama needs to be able to run `nvidia-smi` and `sudo systemctl suspend`.
 
+Make sure nvidia-pstate is in your PATH, or your modified llama.cpp server will look functional, but stay in wasteful pstate 0. A `.bashrc` entry isn't enough if you run it with a crontab @reboot entry, as I discovered!
+
 The go-to-sleep logic looks only at GPU activity (specifically whether it's idling in pstate 8), so you'd need to adjust that if you want to use the machine for anything other than inference (unless you're ok with getting booted every hour!)
 
 You could easily adapt this system to work with other inference backends, or any kind of GPU-using server, really. Just change uses of the process name `server` in sleepyllama.cpp to your server's name, and make sure your server sets pstate 8 when idle ([see other patch examples](https://github.com/sasha0552/ToriLinux/tree/main/airootfs/home/tori/.local/share/tori/patches)).
