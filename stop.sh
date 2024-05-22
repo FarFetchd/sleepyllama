@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while [[ -n $(pgrep server) ]] ; do
+while [[ -n $(ps aux | grep server | grep llama) ]] ; do
   killall server sleepyllama
   sleep 1
 done
