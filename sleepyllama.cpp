@@ -47,7 +47,7 @@ int main(int argc, char** argv)
   while (true)
   {
     this_thread::sleep_for(chrono::seconds(kActivityCheckPeriodSecs));
-    if (runShellSync("nvidia-smi | grep MiB | sed '/server/d' | grep P8").empty())
+    if (!runShellSync("nvidia-smi --query-gpu=pstate --format=csv,noheader | sed '/P8/d'").empty())
       g_secs_since_busy = 0;
     else
       g_secs_since_busy += kActivityCheckPeriodSecs;
