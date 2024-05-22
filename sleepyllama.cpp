@@ -60,10 +60,10 @@ int main(int argc, char** argv)
       pclose(server_pipe);
       system("sudo systemctl suspend");
       uint64_t new_time = curTimeMSSE();
-      while (new_time < cur_time + 5000) // detect time skip: resuming from sleep
+      while (new_time < cur_time + 3000) // detect time skip: resuming from sleep
       {
         cur_time = new_time;
-        this_thread::sleep_for(chrono::milliseconds(100));
+        this_thread::sleep_for(chrono::milliseconds(1));
         new_time = curTimeMSSE();
       }
       server_pipe = popen(argv[1], "r");
