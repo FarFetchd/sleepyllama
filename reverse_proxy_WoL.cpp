@@ -71,6 +71,7 @@ void proxySession(int fd_accepted_from_fe)
   {
     fprintf(stderr, "failed hundreds of attempts to connect to %s:%d\n",
             BACKEND_IP, BACKEND_PORT);
+    close(fd_accepted_from_fe);
     return;
   }
   bool closed = false;
