@@ -10,9 +10,9 @@ sleepyllama has two parts: a reverse proxy, and a wrapper around llama.cpp. The 
 
 # Usage
 
-Compile on your inference machine with `g++ -o sleepyllama sleepyllama.cpp`. Write the entire command line you use to run the llama.cpp server into an executable script file, then run the wrapper as `./sleepyllama that_script_file.sh`.
+Compile on your inference machine with `g++ -o sleepyllama sleepyllama.cpp`. Write the entire command line you run the llama.cpp server with into an executable script file, then run the wrapper as `./sleepyllama that_script_file.sh`.
 
-Fill in the IP/port/etc `#define`s at the top of reverse_proxy_WoL.cc, then compile it on your always-on machine with `g++ -o reverse_proxy_WoL reverse_proxy_WoL.cpp -lpthread`. It takes no arguments.
+Fill in the IP/port/etc `#define`s at the top of reverse_proxy_WoL.cpp, then compile it on your always-on machine with `g++ -o reverse_proxy_WoL reverse_proxy_WoL.cpp -lpthread`. It takes no arguments.
 
 Apply llama_cpp_server_pstates.patch to llama.cpp's examples/server/server.cpp before compiling it. It uses nvidia-pstate, which is a python package: `pip3 install nvidia_pstate`. This allows sleepyllama to watch for idling, and also saves 10s of watts per GPU while idle. Do this even if you decide not to use sleepyllama. Idea from [ToriLinux](https://github.com/sasha0552/ToriLinux)
 
