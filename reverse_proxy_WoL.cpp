@@ -14,7 +14,7 @@
 #define WOL_SOURCE_IFACE "enp0s31f6"
 // choose whatever port you like, and then point your frontend at
 // http://ip_of_machine_running_this_program:THIS_PROGRAM_LISTEN_PORT/
-#define THIS_PROGRAM_LISTEN_PORT 3939
+#define THIS_PROGRAM_LISTEN_PORT "3939"
 // =============================================================
 
 
