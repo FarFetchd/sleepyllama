@@ -4,3 +4,5 @@
 >                 system("nvidia-pstate -s -ps 8");
 2916a2919
 >     system("nvidia-pstate -s -ps 8");
+3819a3821
+>         system("nvidia-pstate -s -ps 16");
