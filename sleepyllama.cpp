@@ -7,8 +7,11 @@
 #include <thread>
 using namespace std;
 
+const int kSleepTimeoutSecs = 60 * 60; // sleep after 1 hour idling in pstate 8
+const char kInferenceShutdownCmd[] = "killall server";
+const char kSystemSleepCmd[] = "sudo systemctl suspend";
+
 const int kActivityCheckPeriodSecs = 10;
-const int kSleepTimeoutSecs = 60 * 60;
 
 uint64_t curTimeMSSE()
 {
@@ -56,9 +59,9 @@ int main(int argc, char** argv)
     {
       g_secs_since_busy = 0;
       uint64_t cur_time = curTimeMSSE();
-      system("killall server");
+      system(kInferenceShutdownCmd);
       pclose(server_pipe);
-      system("sudo systemctl suspend");
+      system(kSystemSleepCmd);
       uint64_t new_time = curTimeMSSE();
       while (new_time < cur_time + 3000) // detect time skip: resuming from sleep
       {
