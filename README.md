@@ -2,15 +2,15 @@
 
 # sleepyllama
 
-An auto-sleeping and -waking framework around llama.cpp: your inference server will go to sleep after sitting idle for a certain length of time, and wake back up when you start interacting with your frontend.
+An auto-sleeping and -waking framework around a CUDA-using server program (llama.cpp by default). Your server machine will go to sleep after sitting idle for a certain length of time, and wake back up when you start interacting with your frontend.
 
 # Architecture
 
-sleepyllama has two parts: a reverse proxy, and a wrapper around llama.cpp. The reverse proxy needs to run on an always-on machine. Whenever it finds itself unable to talk to the specified backend IP:port, it holds the client's connection open and starts sending wake-on-LAN packets, until it can complete the connection to the backend. The llama.cpp wrapper is necessary both to sleep on idle, and to kill and restart the llama.cpp server, since CUDA GPUs don't handle sleep well.
+sleepyllama has two parts: a reverse proxy, and a wrapper around llama.cpp. The reverse proxy needs to run on an always-on machine. Whenever it finds itself unable to talk to the specified backend IP:port, it holds the client's connection open and starts sending wake-on-LAN packets, until it can complete the connection to the backend. The wrapper is necessary both to sleep on idle, and to kill and restart the llama.cpp server, since CUDA GPUs don't handle sleep well.
 
 # Usage
 
-Compile on your inference machine with `g++ -o sleepyllama sleepyllama.cpp`. Write the entire command line you run the llama.cpp server with into an executable script file, then run the wrapper as `./sleepyllama that_script_file.sh`.
+Compile on your inference machine with `g++ -o sleepyllama sleepyllama.cpp`. Write the entire command line you run the llama.cpp (or whatever) server with into an executable script file, then run the wrapper as `./sleepyllama that_script_file.sh`.
 
 Fill in the IP/port/etc `#define`s at the top of reverse_proxy_WoL.cpp, then compile it on your always-on machine with `g++ -o reverse_proxy_WoL reverse_proxy_WoL.cpp -lpthread`. It takes no arguments.
 
@@ -26,4 +26,4 @@ Make sure nvidia-pstate is in your PATH, or your modified llama.cpp server will 
 
 The go-to-sleep logic looks only at GPU activity (specifically whether it's idling in pstate 8), so you'd need to adjust that if you want to use the machine for anything other than inference (unless you're ok with getting booted every hour!)
 
-You could easily adapt this system to work with other inference backends, or any kind of GPU-using server, really. Just change uses of the process name `server` in sleepyllama.cpp to your server's name, and make sure your server sets pstate 8 when idle ([see other patch examples](https://github.com/sasha0552/ToriLinux/tree/main/airootfs/home/tori/.local/share/tori/patches)).
+You could easily adapt this system to work with other inference backends, or any kind of CUDA-using server, really. Just change the `const char kInferenceShutdownCmd[] = "killall server"` const in sleepyllama.cpp accordingly, and make sure your server sets pstate 8 when idle ([see other patch examples](https://github.com/sasha0552/ToriLinux/tree/main/airootfs/home/tori/.local/share/tori/patches)). Similarly, systemd is assumed, but change `kSystemSleepCmd[] = "sudo systemctl suspend"` to your local equivalent and you're all set to run on any Unix-like OS.
