@@ -1,8 +1,50 @@
-1046a1047
->         system("nvidia-pstate -s -ps 16");
-1815a1817
->                 system("nvidia-pstate -s -ps 8");
-2916a2919
->     system("nvidia-pstate -s -ps 8");
-3819a3821
->         system("nvidia-pstate -s -ps 16");
+--- a/examples/server/server.cpp
++++ b/examples/server/server.cpp
+@@ -1053,10 +1053,11 @@ struct server_context {
+ 
+         LOG_INFO("slot is processing task", {
+             {"id_slot", slot.id},
+             {"id_task", slot.id_task},
+         });
++        system("nvidia-pstate -s -ps 16");
+ 
+         return true;
+     }
+ 
+     void kv_cache_clear() {
+@@ -1822,10 +1823,11 @@ struct server_context {
+             if (all_idle) {
+                 LOG_INFO("all slots are idle", {});
+                 if (system_prompt.empty() && clean_kv_cache) {
+                     kv_cache_clear();
+                 }
++                system("nvidia-pstate -s -ps 8");
+ 
+                 return;
+             }
+         }
+ 
+@@ -2912,10 +2914,11 @@ static void log_server_request(const httplib::Request & req, const httplib::Resp
+ 
+ std::function<void(int)> shutdown_handler;
+ std::atomic_flag is_terminating = ATOMIC_FLAG_INIT;
+ 
+ inline void signal_handler(int signal) {
++    system("nvidia-pstate -s -ps 16");
+     if (is_terminating.test_and_set()) {
+         // in case it hangs, we can force terminate the server by hitting Ctrl+C twice
+         // this is for better developer experience, we can remove when the server is stable enough
+         fprintf(stderr, "Received second interrupt, terminating immediately.\n");
+         exit(1);
+@@ -2923,10 +2926,11 @@ inline void signal_handler(int signal) {
+ 
+     shutdown_handler(signal);
+ }
+ 
+ int main(int argc, char ** argv) {
++    system("nvidia-pstate -s -ps 8");
+ #if SERVER_VERBOSE != 1
+     log_disable();
+ #endif
+     // own arguments required by this example
+     gpt_params    params;
