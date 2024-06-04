@@ -58,15 +58,12 @@ void proxyHalf(int fd_from, int fd_to, bool* closed, mutex* mu)
 int connectTCP1sTimeout();
 void proxySession(int fd_accepted_from_fe)
 {
-  int fd_to_backend;
-  for (int i = 0; i < 300; i++)
-  {
+  // start waking immediately if needed. no effect if already awake.
+  thread wake(system, "sudo etherwake -i " WOL_SOURCE_IFACE " " BACKEND_MAC);
+  wake.detach();
+  int fd_to_backend = -1;
+  for (int i = 0; i < 300 && fd_to_backend < 0; i++)
     fd_to_backend = connectTCP1sTimeout();
-    if (fd_to_backend >= 0)
-      break;
-    system("sudo etherwake -i " WOL_SOURCE_IFACE " " BACKEND_MAC);
-    this_thread::sleep_for(chrono::seconds(1));
-  }
   if (fd_to_backend < 0)
   {
     fprintf(stderr, "failed hundreds of attempts to connect to %s:%d\n",
