@@ -63,7 +63,11 @@ void proxySession(int fd_accepted_from_fe)
   wake.detach();
   int fd_to_backend = -1;
   for (int i = 0; i < 300 && fd_to_backend < 0; i++)
+  {
     fd_to_backend = connectTCP1sTimeout();
+    if (fd_to_backend == -1) // -2 means timeout, -1 likely immediate failure
+      this_thread::sleep_for(chrono::seconds(1)); // so don't blow thru all 300
+  }
   if (fd_to_backend < 0)
   {
     fprintf(stderr, "failed hundreds of attempts to connect to %s:%d\n",
@@ -138,7 +142,7 @@ int connectTCP1sTimeout()
     return -1; // probably rejected
   }
   close(sockfd);
-  return -1; // timeout
+  return -2; // timeout
 }
 
 int listenTCP()
