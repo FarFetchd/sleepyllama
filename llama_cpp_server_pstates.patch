@@ -1,8 +1,10 @@
-diff --git a/examples/server/server.cpp b/examples/server/server.cpp
-index fc6d9084..74789ac8 100644
---- a/examples/server/server.cpp
+diff --git a/home/fred/server.cpp b/examples/server/server.cpp
+index d7fb6181..0ade9823 100644
+--- a/home/fred/server.cpp
 +++ b/examples/server/server.cpp
-@@ -1051,6 +1051,7 @@ struct server_context {
+@@ -1096,10 +1096,11 @@ struct server_context {
+         }
+ 
          slot.command = SLOT_COMMAND_LOAD_PROMPT;
          slot.prompt_tokens.clear();
  
@@ -10,7 +12,11 @@ index fc6d9084..74789ac8 100644
          LOG_INFO("slot is processing task", {
              {"id_slot", slot.id},
              {"id_task", slot.id_task},
-@@ -1820,6 +1821,7 @@ struct server_context {
+         });
+ 
+@@ -1903,10 +1904,11 @@ struct server_context {
+                     break;
+                 }
              }
  
              if (all_idle) {
@@ -18,7 +24,11 @@ index fc6d9084..74789ac8 100644
                  LOG_INFO("all slots are idle", {});
                  if (system_prompt.empty() && clean_kv_cache) {
                      kv_cache_clear();
-@@ -2914,6 +2916,7 @@ std::function<void(int)> shutdown_handler;
+                 }
+ 
+@@ -2453,10 +2455,11 @@ static void log_server_request(const httplib::Request & req, const httplib::Resp
+ 
+ std::function<void(int)> shutdown_handler;
  std::atomic_flag is_terminating = ATOMIC_FLAG_INIT;
  
  inline void signal_handler(int signal) {
@@ -26,3 +36,5 @@ index fc6d9084..74789ac8 100644
      if (is_terminating.test_and_set()) {
          // in case it hangs, we can force terminate the server by hitting Ctrl+C twice
          // this is for better developer experience, we can remove when the server is stable enough
+         fprintf(stderr, "Received second interrupt, terminating immediately.\n");
+         exit(1);
