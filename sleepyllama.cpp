@@ -7,7 +7,7 @@
 #include <thread>
 using namespace std;
 
-const int kSleepTimeoutSecs = 2 * 60 * 60; // sleep after 2 hour idling in pstate 8
+const int kSleepTimeoutSecs = 1 * 60 * 60; // sleep after 1 hour idling in pstate 8
 const char kInferenceShutdownCmd[] = "killall llama-server";
 const char kSystemSleepCmd[] = "sudo systemctl suspend";
 
