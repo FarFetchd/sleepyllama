@@ -46,6 +46,7 @@ int main(int argc, char** argv)
   }
   signal(SIGUSR1, handleSIGUSR1);
 
+  fprintf(stderr, "now running %s\n", argv[1]);
   FILE* server_pipe = popen(argv[1], "r");
   while (true)
   {
@@ -69,6 +70,7 @@ int main(int argc, char** argv)
         this_thread::sleep_for(chrono::milliseconds(1));
         new_time = curTimeMSSE();
       }
+      fprintf(stderr, "now running %s\n", argv[1]);
       server_pipe = popen(argv[1], "r");
     }
   }
