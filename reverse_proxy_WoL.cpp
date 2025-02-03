@@ -29,9 +29,11 @@
 #include <fcntl.h>
 #include <netinet/tcp.h>
 #include <mutex>
+#include <signal.h>
 using namespace std;
 
-void proxyHalf(int fd_from, int fd_to, bool* closed, mutex* mu)
+void proxyHalf(int fd_from, int fd_to, bool* closed, mutex* mu,
+               int discard_first_n_bytes)
 {
   uint8_t buf[2048];
   int res = 39393939;
@@ -55,18 +57,23 @@ void proxyHalf(int fd_from, int fd_to, bool* closed, mutex* mu)
   }
 }
 
-int connectTCP1sTimeout();
+constexpr char kImpostorPrefix[] = "HTTP/1.1 200 OK\r\n";
+
+int connectTCP2sTimeout();
 void proxySession(int fd_accepted_from_fe)
 {
   // start waking immediately if needed. no effect if already awake.
   thread wake(system, "sudo etherwake -i " WOL_SOURCE_IFACE " " BACKEND_MAC);
   wake.detach();
   int fd_to_backend = -1;
-  for (int i = 0; i < 300 && fd_to_backend < 0; i++)
+  int impostor_bytes_sent = 0;
+  for (int i = 0; i < 100 && fd_to_backend < 0; i++)
   {
-    fd_to_backend = connectTCP1sTimeout();
+    fd_to_backend = connectTCP2sTimeout();
     if (fd_to_backend == -1) // -2 means timeout, -1 likely immediate failure
-      this_thread::sleep_for(chrono::seconds(1)); // so don't blow thru all 300
+      this_thread::sleep_for(chrono::seconds(1)); // so don't blow thru all 100
+    if (fd_to_backend < 0 && impostor_bytes_sent < strlen(kImpostorPrefix))
+      send(fd_accepted_from_fe, kImpostorPrefix + (impostor_bytes_sent++), 1, 0);
   }
   if (fd_to_backend < 0)
   {
@@ -77,8 +84,9 @@ void proxySession(int fd_accepted_from_fe)
   }
   bool closed = false;
   mutex mu;
-  thread f_to_b(proxyHalf, fd_accepted_from_fe, fd_to_backend, &closed, &mu);
-  thread b_to_f(proxyHalf, fd_to_backend, fd_accepted_from_fe, &closed, &mu);
+  thread f_to_b(proxyHalf, fd_accepted_from_fe, fd_to_backend, &closed, &mu, 0);
+  thread b_to_f(proxyHalf, fd_to_backend, fd_accepted_from_fe, &closed, &mu,
+                impostor_bytes_sent);
   f_to_b.join();
   b_to_f.join();
   lock_guard<mutex> lock(mu);
@@ -92,6 +100,7 @@ void proxySession(int fd_accepted_from_fe)
 int listenTCP();
 int main()
 {
+  signal(SIGPIPE, SIG_IGN);
   int listen_fd = listenTCP();
   while (true)
   {
@@ -103,7 +112,7 @@ int main()
 
 
 
-int connectTCP1sTimeout()
+int connectTCP2sTimeout()
 {
   struct sockaddr_in dest_addr;
   memset(&dest_addr, 0, sizeof(dest_addr));
@@ -127,7 +136,7 @@ int connectTCP1sTimeout()
   }
 
   struct timeval timeout;
-  timeout.tv_sec = 1;
+  timeout.tv_sec = 2;
   timeout.tv_usec = 0;
   if (select(sockfd+1, NULL, &fdset, NULL, &timeout) > 0)
   {
