@@ -8,7 +8,7 @@
 using namespace std;
 
 const int kSleepTimeoutSecs = 1 * 60 * 60; // sleep after 1 hour idling in pstate 8
-const char kInferenceShutdownCmd[] = "killall llama-server";
+const char kInferenceShutdownCmd[] = "killall llama-server whisper-server";
 const char kSystemSleepCmd[] = "sudo systemctl suspend";
 
 const int kActivityCheckPeriodSecs = 10;
@@ -36,18 +36,34 @@ void handleSIGUSR1(int signal)
   g_secs_since_busy = kSleepTimeoutSecs + 1; // "sleep now"
 }
 
+void runAll(FILE** server_pipes, int argc, char** argv)
+{
+  for (int i=0; i<argc-1; i++)
+  {
+    fprintf(stderr, "now running %s\n", argv[i+1]);
+    server_pipes[i] = popen(argv[i+1], "r");
+  }
+}
+void closeAllPipes(FILE** server_pipes, int argc)
+{
+  for (int i=0; i<argc-1; i++)
+    pclose(server_pipes[i]);
+}
+
 int main(int argc, char** argv)
 {
-  if (argc != 2)
+  if (argc < 2)
   {
-    fprintf(stderr, "usage: %s /path/to/llama_cpp_server_runner_script_path.sh\n",
+    fprintf(stderr, "usage: %s /path/to/llama_cpp_server_runner_script_path1.sh script_path2.sh etc\n"
+                    "(will keep all servers started by those scripts running)\n"
+                    "(be sure all server binaries used are listed in kInferenceShutdownCmd)",
             argv[0]);
     return 1;
   }
   signal(SIGUSR1, handleSIGUSR1);
 
-  fprintf(stderr, "now running %s\n", argv[1]);
-  FILE* server_pipe = popen(argv[1], "r");
+  FILE** server_pipes = (FILE**)malloc(sizeof(FILE*) * (argc-1));
+  runAll(server_pipes, argc, argv);
   while (true)
   {
     this_thread::sleep_for(chrono::seconds(kActivityCheckPeriodSecs));
@@ -61,7 +77,7 @@ int main(int argc, char** argv)
       g_secs_since_busy = 0;
       uint64_t cur_time = curTimeMSSE();
       system(kInferenceShutdownCmd);
-      pclose(server_pipe);
+      closeAllPipes(server_pipes, argc); // blocks until all server children exit
       system(kSystemSleepCmd);
       uint64_t new_time = curTimeMSSE();
       while (new_time < cur_time + 3000) // detect time skip: resuming from sleep
@@ -70,8 +86,7 @@ int main(int argc, char** argv)
         this_thread::sleep_for(chrono::milliseconds(1));
         new_time = curTimeMSSE();
       }
-      fprintf(stderr, "now running %s\n", argv[1]);
-      server_pipe = popen(argv[1], "r");
+      runAll(server_pipes, argc, argv);
     }
   }
   return 0;
